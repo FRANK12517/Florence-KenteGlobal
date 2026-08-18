@@ -1,0 +1,8 @@
+--- CONFIGURATION FILES ---
+--- PACKAGE MANIFEST STATUS ---
+No package.json present; no JavaScript build/test scripts available.
+--- TEST DISCOVERY ---
+--- SOURCE DISCOVERY ---
+--- STATUS AFTER AUDIT ---
+## [32mmain[m...[31morigin/main[m
+[31m??[m baseline-command-output.txt

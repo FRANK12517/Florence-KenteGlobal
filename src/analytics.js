@@ -1,0 +1,11 @@
+export function buildAnalytics({orders=[],products=[],customers=[]}={}){
+  const paid=orders.filter(o=>['Paid','Processing','Packed','Dispatched','In Transit','Out for Delivery','Delivered'].includes(o.status));
+  const revenue=paid.reduce((sum,o)=>sum+Number(o.chargedTotal??o.total??0),0);
+  const now=new Date(); const day=new Date(now); day.setHours(0,0,0,0); const week=new Date(day); week.setDate(day.getDate()-6); const month=new Date(day); month.setDate(1);
+  const inRange=(o,start)=>new Date(o.date)>=start;
+  const sums={today:paid.filter(o=>inRange(o,day)).reduce((s,o)=>s+Number(o.chargedTotal??o.total??0),0),week:paid.filter(o=>inRange(o,week)).reduce((s,o)=>s+Number(o.chargedTotal??o.total??0),0),month:paid.filter(o=>inRange(o,month)).reduce((s,o)=>s+Number(o.chargedTotal??o.total??0),0)};
+  const orderStates=orders.reduce((acc,o)=>(acc[o.status]=(acc[o.status]||0)+1,acc),{});
+  const productSales={}; const countrySales={}; const currencySales={};
+  paid.forEach(o=>{countrySales[o.customer?.country||o.shippingAddress?.country||'Unknown']=(countrySales[o.customer?.country||o.shippingAddress?.country||'Unknown']||0)+Number(o.chargedTotal??o.total??0);currencySales[o.currency||'USD']=(currencySales[o.currency||'USD']||0)+Number(o.chargedTotal??o.total??0);(o.items||[]).forEach(i=>{productSales[i.name]=(productSales[i.name]||0)+Number(i.quantity||0);});});
+  return {revenue,sums,orderStates,productSales,countrySales,currencySales,totalOrders:orders.length,pendingOrders:orders.filter(o=>['Pending','Payment Pending'].includes(o.status)).length,paidOrders:orders.filter(o=>o.status==='Paid').length,processingOrders:orders.filter(o=>['Processing','Packed','Dispatched','In Transit','Out for Delivery'].includes(o.status)).length,deliveredOrders:orders.filter(o=>o.status==='Delivered').length,cancelledOrders:orders.filter(o=>o.status==='Cancelled').length,refunds:orders.filter(o=>['Refunded','Returned'].includes(o.status)).length,lowStock:products.filter(p=>p.stock<=Number(p.threshold??5)).length,topProducts:Object.entries(productSales).sort((a,b)=>b[1]-a[1]).slice(0,5),recentOrders:[...orders].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5),customerCount:customers.length||new Set(orders.map(o=>o.customer?.email).filter(Boolean)).size};
+}
